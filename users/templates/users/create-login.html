@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Create Login session{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block content %}
+  <div class="container bg-white p-5 rounded">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <h1 class="text-center">Create Login session</h1>
+        <hr class="mt-0 mb-4">
+        <p>Please select the marketplace to login to:</p>
+        <form action="" method="post">
+          {% csrf_token %}
+          {{ form|crispy }}
+          <button type="submit" class="btn btn-primary mx-auto d-block">Create login session</button>
+        </form>
+      </div>
+    </div>
+  </div>
+{% endblock %}

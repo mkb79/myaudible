@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% load static %}
+{% block stylesheet %}
+  <link rel="stylesheet" type="text/css" href="{% static "css/login.css" %}">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+
+{% block title %}SignIn{% endblock %}
+
+{% block content %}
+  <main class="form-signin text-center">
+    <form action="{% url 'login' %}" method="post">
+      <img class="mb-4" src="{% static 'assets/audible-logo.png' %}" alt="" width="72" height="57">
+      <h1 class="h3 mb-3 fw-normal">Please sign in</h1>
+      <p>If you don't have an account <a href="{% url 'account_register' %}">sign-up here</a></p>
+
+      {% csrf_token %}
+      {{ form|as_crispy_errors }}
+      <div class="form-floating">
+        {{ form.username|as_crispy_field }}
+      </div>
+      <div class="form-floating">
+        {{ form.password|as_crispy_field }}
+      </div>
+      <input type="hidden" name="next" value="{{ request.GET.next }}">
+  
+      <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
+    </form>
+    <br>
+    <p><a href="{% url 'password_reset' %}">Forgotten your password?</a></p>
+    <p><a href="{% url 'dashboard' %}">Back to dashboard</a></p>
+  </main>
+{% endblock %}

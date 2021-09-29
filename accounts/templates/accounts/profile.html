@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}MyAudible Profile{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    <div class="col-sm-12 col-md-8 col-lg-6 pb-4">
+      <h1 class="display-4 font-weight-bold">MyAudible Profile</h1>
+      <hr>
+      <p>Hello, {{ user.username }}!</p>
+      <p>Welcome to your profile. You can <a href="{% url 'account_edit' %}">edit your profile</a> or <a href="{% url 'password_change' %}">change your password</a>.</p>
+    </div>
+  </div>
+  <div class="container py-5">
+    <div class="col-sm-12 col-md-8 col-lg-6 pb-4">
+      <h1 class="display-4 font-weight-bold">Connected Audible account</h1>
+      <hr>
+      {% if fl_user %}
+      <p>{{ fl_user.last_name }}, 
+      {{ fl_user.first_name }}</p>
+      {% else %}
+      <p>None {{ fl_user.first_name }}</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
