@@ -10,12 +10,11 @@ from core.login import session_pool
 
 
 @csrf_exempt
-def audible_login(request, login_uuid, resource=None, *args, **kwargs):
+def register_device(request, login_uuid, resource=None, *args, **kwargs):
     s_obj = session_pool.get_session_by_uuid(login_uuid)
     if not s_obj:
         raise Http404('Login session does not exist.')
 
-    # we are finished
     if resource:
         if request.META['QUERY_STRING']:
             resource += '?' + request.META['QUERY_STRING']
@@ -25,6 +24,7 @@ def audible_login(request, login_uuid, resource=None, *args, **kwargs):
             data = request.POST
         s_obj.session.request(method=request.method, url=resource, data=data)
 
+    # we are finished
     # TODO: write success page
     if s_obj.is_logged_in:
         s_obj.close_session()
@@ -42,10 +42,10 @@ def audible_login(request, login_uuid, resource=None, *args, **kwargs):
     )
 
 
-class CreateLoginSessionView(LoginRequiredMixin, FormView):
+class RegisterDeviceView(LoginRequiredMixin, FormView):
 
     form_class = AudibleCreateLoginForm
-    template_name = 'users/create-login.html'
+    template_name = 'devices/create-login.html'
 
     def get(self, request, *args, **kwargs):
         # remove old login session if exists
@@ -66,9 +66,9 @@ class CreateLoginSessionView(LoginRequiredMixin, FormView):
         )
 
         proxy_url = self.request.build_absolute_uri(
-            reverse(audible_login, kwargs={'login_uuid': s_obj.session_uuid})
+            reverse(register_device, kwargs={'login_uuid': s_obj.session_uuid})
         )
         s_obj.start_session(proxy_url=proxy_url)
         
-        return redirect(audible_login, login_uuid=s_obj.session_uuid)
+        return redirect(register_device, login_uuid=s_obj.session_uuid)
 

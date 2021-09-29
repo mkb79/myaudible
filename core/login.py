@@ -6,7 +6,6 @@ import uuid
 from urllib.parse import parse_qs
 
 import httpx
-from bs4 import BeautifulSoup
 from django.utils import timezone
 from typing import Dict, Optional, Tuple
 
@@ -17,18 +16,6 @@ USER_AGENT = (
     'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) '
     'AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'
 )
-
-
-def get_form_inputs(
-    form: BeautifulSoup,
-    search_field: Optional[Dict[str, str]] = None
-) -> Dict[str, str]:
-    """Extracts hidden form input fields from a Amazon login page."""
-    inputs = {}
-    for field in form.find_all('input'):
-        if field.get('name'):
-            inputs[field['name']] = field.get('value', '')
-    return inputs
 
 
 def build_device_serial() -> str:

@@ -153,6 +153,6 @@ class AudibleDeviceAdmin(admin.ModelAdmin):
         else:
             form = AuthFileImportForm()
         return render(
-            request, 'users/auth-file-import-form.html', {'form': form}
+            request, 'devices/auth-file-import-form.html', {'form': form}
         )
 
