@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Device Detail{% endblock %}
+
+{% block content %}
+  <div class="container bg-white p-5 rounded">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <h1 class="text-center">{{ object.device_info.device_name }}</h1>
+        <hr class="mt-0 mb-4">
+      </div>
+    </div>
+  </div>
+{% endblock %}

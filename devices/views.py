@@ -1,11 +1,16 @@
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.http import Http404, HttpResponse
 from django.urls import reverse
 from django.shortcuts import redirect
-from django.views.generic import FormView, TemplateView
+from django.views.generic import FormView
+from django.views.generic.detail import DetailView
+from django.views.generic.list import ListView
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .forms import (AudibleCreateLoginForm)
+from .admin import process_import
+from .forms import AudibleCreateLoginForm, AuthFileImportForm
+from .models import AudibleDevice
 from core.login import session_pool
 
 
@@ -72,3 +77,41 @@ class RegisterDeviceView(LoginRequiredMixin, FormView):
         
         return redirect(register_device, login_uuid=s_obj.session_uuid)
 
+
+class ImportAuthFileView(LoginRequiredMixin, SuccessMessageMixin, FormView):
+    form_class = AuthFileImportForm
+    success_message = 'Your auth file has been imported'
+    template_name = 'devices/auth-file-import-form.html'
+
+    def form_valid(self, form):
+        cd = form.cleaned_data
+        auth_file = cd['auth_file']
+        password = cd['password']
+
+        process_import(
+            file=auth_file,
+            password=password,
+            user=self.request.user
+        )
+
+        return redirect('import_auth_file')
+
+
+class OwnDevicesListView(LoginRequiredMixin, ListView):
+
+    model = AudibleDevice
+    template_name = 'devices/audible-devices-list.html'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(user=self.request.user)
+
+
+class OwnDevicesDetailView(LoginRequiredMixin, DetailView):
+
+    model = AudibleDevice
+    template_name = 'devices/audible-device-detail.html'
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.filter(user=self.request.user)

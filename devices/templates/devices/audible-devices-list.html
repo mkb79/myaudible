@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Registered Audible devices{% endblock %}
+
+{% block content %}
+  <div class="container bg-white p-5 rounded">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <h1 class="text-center">Registered Audible devices</h1>
+        <hr class="mt-0 mb-4">
+        <ul>
+          {% for device in object_list %}
+            <li>
+              <a href="{{ device.get_absolute_url }}">{{ device.device_info.device_name }}</a>
+              <p>Owner: {{ device.customer_info.name }}</p>
+            </li>
+          {% empty %}
+            <li>No devices registered yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endblock %}

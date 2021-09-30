@@ -1,12 +1,14 @@
-{% extends 'admin/base.html' %}
+{% extends 'base.html' %}
+
+{% load crispy_forms_tags %}
 
 {% block content %}
-    <div>
+    <div class="container">
         <form action="." method="POST" enctype="multipart/form-data">
-            {{ form.as_p }}
+            {{ form|crispy }}
             {% csrf_token %}
 
-                <button type="submit">Upload auth file</button>
+            <button type="submit" class="btn btn-primary mx-auto d-block">Upload auth file!</button>
         </form>
     </div>
     <br />

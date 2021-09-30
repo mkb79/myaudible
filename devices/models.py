@@ -1,10 +1,11 @@
+from django.conf import settings
 from django.db import models
 from django.core.validators import RegexValidator, MaxLengthValidator
 
 
 class AudibleDevice(models.Model):
     user = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         related_name='audible_devices',
         on_delete=models.CASCADE
     )
@@ -16,6 +17,10 @@ class AudibleDevice(models.Model):
         if hasattr(self, 'device_info'):
             return self.device_info.device_name
         return 'unknown Audible device'
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('own_device_detail', kwargs={'pk' : self.pk})
 
 
 class BearerToken(models.Model):
