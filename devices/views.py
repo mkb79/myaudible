@@ -55,7 +55,7 @@ class RegisterDeviceView(LoginRequiredMixin, FormView):
     def get(self, request, *args, **kwargs):
         # remove old login session if exists
         session_key = self.request.session.session_key
-        if session_pool.has_session(session_key):
+        if session_key in session_pool:
             session_pool.remove_session(session_key)
 
         return super().get(request, *args, **kwargs)

@@ -3,6 +3,7 @@ import json
 import re
 import secrets
 import uuid
+from collections import UserDict
 from urllib.parse import parse_qs
 
 import httpx
@@ -209,14 +210,14 @@ class DjangoAudibleLogin:
             },
             "registration_data": {
                 "domain": "Device",
-                "app_version": "3.26.1",
+                "app_version": "3.56.2",
                 "device_serial": self._serial,
                 "device_type": "A2CZJZGLK2JJVM",
                 "device_name": (
                     "%FIRST_NAME%%FIRST_NAME_POSSESSIVE_STRING%%DUPE_"
                     "STRATEGY_1ST%Audible for iPhone"
                 ),
-                "os_version": "14.7.0",
+                "os_version": "15.0.0",
                 "device_model": "iPhone",
                 "app_name": "Audible"
             },
@@ -224,7 +225,10 @@ class DjangoAudibleLogin:
             "requested_extensions": ["device_info", "customer_info"]
         }
     
-        resp = httpx.post(f"https://api.amazon.{self._marketplace.domain}/auth/register", json=body)
+        resp = httpx.post(
+            f"https://api.amazon.{self._marketplace.domain}/auth/register",
+            json=body
+        )
         return resp
 
 
@@ -268,12 +272,9 @@ class SessionObject:
         return self.session._access_token is not None
 
 
-class AudibleLoginSessionPool:
-    def __init__(self):
-        self._running_sessions = {}
-
+class AudibleLoginSessionPool(UserDict):
     def create_session(self, session_key, expires_in=300, **kwargs):
-        if self.has_session(session_key):
+        if session_key in self:
             raise Exception('Login session exists')
 
         session = DjangoAudibleLogin(**kwargs)
@@ -281,51 +282,39 @@ class AudibleLoginSessionPool:
             session_key=session_key,
             expires_in=expires_in,
             session=session)
-        self._running_sessions[session_key] = session_obj
+        self[session_key] = session_obj
 
         return session_obj
 
-    def has_session(self, session_key):
-        return session_key in self._running_sessions
-
     def has_uuid(self, session_uuid):
-        for session_obj in self._running_sessions.values():
+        for session_obj in self.values():
             if session_uuid == session_obj.session_uuid:
                 return True
         return False
 
-    def get_session(self, session_key):
-        try:
-            return self._running_sessions[session_key]
-        except KeyError:
-            pass
-
     def get_session_by_uuid(self, session_uuid):
-        for session_obj in self._running_sessions.values():
+        for session_obj in self.values():
             if session_uuid == session_obj.session_uuid:
                 return session_obj
 
     def get_uuid_for_session_key(self, session_key):
         try:
-            return self._running_sessions[session_key].session_uuid
+            return self[session_key].session_uuid
         except KeyError:
             pass
 
     def remove_session(self, session_key):
         try:
-           self._running_sessions[session_key].close_session()
-           del self._running_sessions[session_key]
+           self[session_key].close_session()
+           del self[session_key]
         except KeyError:
             pass
 
     def cleanup_sessions(self):
-        remove_sessions = []
-        for session_id, session_obj in self._running_sessions.items():
-            if session_obj.is_expired:
-                remove_sessions.append(session_id)
-
-        for i in remove_sessions:
-            self.remove_session(i)
+        for session_id in list(self.keys()):
+            if self[session_id].is_expired:
+                self.remove_session(session_id)
 
 
 session_pool = AudibleLoginSessionPool()
+
