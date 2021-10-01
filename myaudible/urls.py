@@ -17,11 +17,14 @@ from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include, path
+from django.views.generic import RedirectView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
-    path('devices/', include('devices.urls'))
+    path('devices/', include('devices.urls')),
+    path('', RedirectView.as_view(url='devices/', permanent=True)),
 ]
 
 if settings.DEBUG:
