@@ -11,7 +11,7 @@
         <ul>
           {% for device in object_list %}
             <li>
-              <a href="{{ device.get_absolute_url }}">{{ device.device_info.device_name }}</a>
+              <a href="{{ device.get_absolute_url }}"><strong>{{ device.device_info.device_name }}</strong></a>
               <p>Owner: {{ device.customer_info.name }}</p>
             </li>
           {% empty %}
@@ -19,6 +19,7 @@
           {% endfor %}
         </ul>
       </div>
+      <a class="btn btn-sm btn-primary" role="button" href="{% url 'audible_add_device' %}">Add new device</a>
     </div>
   </div>
 {% endblock %}

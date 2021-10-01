@@ -5,9 +5,32 @@
 {% block content %}
   <div class="container bg-white p-5 rounded">
     <div class="row justify-content-center">
-      <div class="col-md-8 col-lg-6">
+      <div class="col-md-10 col-lg-8">
         <h1 class="text-center">{{ object.device_info.device_name }}</h1>
         <hr class="mt-0 mb-4">
+      </div>
+      <div class="col">
+        <h4>Customer Info</h4>
+        <table class="table table-borderless table-sm">
+          <tbody>
+            <tr>
+              <td>Name:</td>
+              <td>{{ object.customer_info.name }}</td>
+            </tr>
+            <tr>
+              <td>Home Region:</td>
+              <td>{{ object.customer_info.home_region }}</td>
+            </tr>
+            <tr>
+              <td>Account Pool:</td>
+              <td>{{ object.customer_info.account_pool }}</td>
+            </tr>
+            <tr>
+              <td>User ID:</td>
+              <td>{{ object.customer_info.user_id }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
