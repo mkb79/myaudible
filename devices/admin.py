@@ -120,8 +120,8 @@ class AudibleDeviceAdmin(admin.ModelAdmin):
         StoreAuthenticationCookieInline,
         WebsiteCookieInline
     ]
-    list_filter = ('last_modified', 'created')
-    list_display = ('user', 'device_name', 'created', 'last_modified')
+    list_filter = ('last_modified', 'created_at')
+    list_display = ('user', 'device_name', 'created_at', 'last_modified')
     change_list_template = 'audible_devices_changelist.html'
 
     def device_name(self, obj):

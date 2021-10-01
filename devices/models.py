@@ -9,9 +9,12 @@ class AudibleDevice(models.Model):
         related_name='audible_devices',
         on_delete=models.CASCADE
     )
-    created = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     country_code = models.CharField(max_length=5)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         if hasattr(self, 'device_info'):
