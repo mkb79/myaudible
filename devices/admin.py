@@ -1,11 +1,6 @@
-import json
-from datetime import datetime
-
 from django.contrib import admin
-from django.db import transaction
 from django.shortcuts import redirect, render
 from django.urls import path
-from audible.aescipher import AESCipher
 
 from .models import (
     AudibleDevice,
@@ -47,69 +42,6 @@ class WebsiteCookieInline(admin.StackedInline):
     classes = ['collapse']
 
 
-def detect_auth_data_encryption(data):
-    try:
-        data = json.loads(data)
-        if "adp_token" in data:
-            return False
-        elif "ciphertext" in data:
-            return "json"
-    except UnicodeDecodeError:
-        return "bytes"
-
-
-def process_import(file, password, user):
-    data = file.read()
-    encryption = detect_auth_data_encryption(data)
-    if encryption:
-        crypter = AESCipher(password=password)
-        if encryption == "json":
-            encrypted_dict = json.loads(data)
-            data = crypter.from_dict(encrypted_dict)
-        elif encryption == "bytes":
-            data = crypter.from_bytes(data)
-    data = json.loads(data)
-    device = AudibleDevice(
-        user=user, country_code=data.get('locale_code')
-    )
-    bearer = BearerToken(
-        device=device,
-        access_token=data.get('access_token'),
-        refresh_token=data.get('refresh_token'),
-        access_token_expires=datetime.fromtimestamp(data['expires'])
-    )
-    customer_info = CustomerInfo(
-        device=device, **data.get('customer_info')
-    )
-    device_info = DeviceInfo(
-        device=device, **data.get('device_info')
-    )
-    mac_dms = MessageAuthenticationCode(
-        device=device,
-        adp_token=data.get('adp_token'),
-        device_cert=data.get('device_private_key')
-    )
-    store_cookie = StoreAuthenticationCookie(
-        device=device,
-        cookie=data.get('store_authentication_cookie',{}).get('cookie')
-    )
-
-    with transaction.atomic():
-        device.save()
-        bearer.save()
-        customer_info.save()
-        device_info.save()
-        mac_dms.save()
-        store_cookie.save()
-
-    for name, value in data.get('website_cookies', {}).items():
-        device.website_cookies.create(
-            country_code=data.get('locale_code'),
-            name=name,
-            value=value
-        )
-
-
 @admin.register(AudibleDevice)
 class AudibleDeviceAdmin(admin.ModelAdmin):
     inlines = [
@@ -144,10 +76,11 @@ class AudibleDeviceAdmin(admin.ModelAdmin):
         if request.method == 'POST':
             form = AuthFileImportForm(request.POST, request.FILES)
             if form.is_valid():
-                process_import(
+                AudibleDevice.create_from_file_import(
                     file=request.FILES.get('auth_file'),
                     password=request.POST.get('password'),
-                    user=request.user)
+                    user=request.user
+                )
                 self.message_user(request, 'Your auth file has been imported')
                 return redirect('..')
         else:

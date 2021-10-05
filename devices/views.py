@@ -8,7 +8,6 @@ from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 from django.views.decorators.csrf import csrf_exempt
 
-from .admin import process_import
 from .forms import AudibleCreateLoginForm, AuthFileImportForm
 from .models import AudibleDevice
 from core.login import session_pool
@@ -30,11 +29,14 @@ def register_device(request, login_uuid, resource=None, *args, **kwargs):
         s_obj.session.request(method=request.method, url=resource, data=data)
 
     # we are finished
-    # TODO: write success page
     if s_obj.is_logged_in:
-        s_obj.close_session()
-        print(s_obj.session._access_token)
-        return
+        registration_data = s_obj.session.register()
+        AudibleDevice.create_from_registration(
+            data=registration_data,
+            user=request.user
+        )
+        session_pool.remove_session(login_uuid)
+        return redirect('own_devices_list')
 
     status = s_obj.session._last_response.status_code
     content_type = s_obj.session._last_response.headers['Content-Type']
@@ -88,13 +90,13 @@ class ImportAuthFileView(LoginRequiredMixin, SuccessMessageMixin, FormView):
         auth_file = cd['auth_file']
         password = cd['password']
 
-        process_import(
+        AudibleDevice.create_from_file_import(
             file=auth_file,
             password=password,
             user=self.request.user
         )
 
-        return redirect('import_auth_file')
+        return redirect('own_devices_list')
 
 
 class OwnDevicesListView(LoginRequiredMixin, ListView):

@@ -196,40 +196,77 @@ class DjangoAudibleLogin:
         return response
 
     def register(self):
-        if not self.state.status_name == 'COMPLETE':
+        if self._access_token is None:
             raise Exception('Login not completed')
 
         body = {
-            "requested_token_type": [
-                "bearer", "mac_dms", "website_cookies",
-                "store_authentication_cookie"
+            'requested_token_type': [
+                'bearer', 'mac_dms', 'website_cookies',
+                'store_authentication_cookie'
              ],
-            "cookies": {
-                "website_cookies": [],
-                "domain": f".amazon.{self._marketplace.domain}"
+             'requested_extensions': [
+                 'device_info', 'customer_info'
+             ],
+            'cookies': {
+                'website_cookies': [],
+                'domain': f'.amazon.{self._marketplace.domain}'
             },
-            "registration_data": {
-                "domain": "Device",
-                "app_version": "3.56.2",
-                "device_serial": self._serial,
-                "device_type": "A2CZJZGLK2JJVM",
-                "device_name": (
-                    "%FIRST_NAME%%FIRST_NAME_POSSESSIVE_STRING%%DUPE_"
-                    "STRATEGY_1ST%Audible for iPhone"
+            'registration_data': {
+                'domain': 'Device',
+                'app_version': '3.56.2',
+                'device_serial': self._serial,
+                'device_type': 'A2CZJZGLK2JJVM',
+                'device_name': (
+                    '%FIRST_NAME%%FIRST_NAME_POSSESSIVE_STRING%%DUPE_'
+                    'STRATEGY_1ST%Audible for iPhone'
                 ),
-                "os_version": "15.0.0",
-                "device_model": "iPhone",
-                "app_name": "Audible"
+                'os_version': '15.0.0',
+                'device_model': 'iPhone',
+                'app_name': 'Audible'
             },
-            "auth_data": {"access_token": self._access_token},
-            "requested_extensions": ["device_info", "customer_info"]
+            'auth_data': {'access_token': self._access_token}
         }
     
         resp = httpx.post(
-            f"https://api.amazon.{self._marketplace.domain}/auth/register",
+            f'https://api.amazon.{self._marketplace.domain}/auth/register',
             json=body
         )
-        return resp
+
+        resp_json = resp.json()
+        if resp.status_code != 200:
+            raise Exception(resp_json)
+    
+        success_response = resp_json['response']['success']
+    
+        tokens = success_response['tokens']
+        adp_token = tokens['mac_dms']['adp_token']
+        device_private_key = tokens['mac_dms']['device_private_key']
+        store_authentication_cookie = tokens['store_authentication_cookie']
+        access_token = tokens['bearer']['access_token']
+        refresh_token = tokens['bearer']['refresh_token']
+        expires_s = int(tokens['bearer']['expires_in'])
+        expires = timezone.now() + timezone.timedelta(seconds=expires_s)
+    
+        extensions = success_response['extensions']
+        device_info = extensions['device_info']
+        customer_info = extensions['customer_info']
+    
+        website_cookies = dict()
+        for cookie in tokens['website_cookies']:
+            website_cookies[cookie['Name']] = cookie['Value'].replace(r'"', r'')
+    
+        return {
+            'adp_token': adp_token,
+            'device_private_key': device_private_key,
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'expires': expires,
+            'website_cookies': website_cookies,
+            'store_authentication_cookie': store_authentication_cookie,
+            'device_info': device_info,
+            'customer_info': customer_info,
+            'locale_code': self._marketplace.country_code
+        }
 
 
 class SessionObject:
